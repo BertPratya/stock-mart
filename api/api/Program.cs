@@ -9,6 +9,18 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", policy =>
+    {
+        policy.AllowAnyOrigin()  // Allows all origins
+              .AllowAnyHeader()  // Allows any header
+              .AllowAnyMethod(); // Allows any HTTP method (GET, POST, etc.)
+    });
+});
+
+
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -30,8 +42,8 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 8;
     options.User.RequireUniqueEmail = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
 }).AddEntityFrameworkStores<ApplicationDBContext>();
 
 builder.Services.AddAuthentication(options =>
@@ -61,13 +73,14 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
-
+app.UseCors("AllowAllOrigins");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseHttpsRedirection();
 

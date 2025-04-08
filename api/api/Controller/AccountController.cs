@@ -31,12 +31,18 @@ namespace api.Controller
 
             try
             {
+                // Check if the username already exists
+                var existingUser = await _userManager.FindByNameAsync(registerUserDto.UserName.ToLower());
+                if (existingUser != null)
+                {
+                    return Conflict(new { message = "Username is already taken" });
+                }
+
                 var user = new AppUser
                 {
                     Email = registerUserDto.Email.ToLower(),
                     UserName = registerUserDto.UserName.ToLower()
                 };
-
 
                 var createResult = await _userManager.CreateAsync(user, registerUserDto.Password);
 
@@ -44,6 +50,7 @@ namespace api.Controller
                 {
                     return StatusCode(500, createResult.Errors);
                 }
+
                 var token = _tokenService.GenerateToken(user);
                 return Ok(
                     new AppUserDto
@@ -60,6 +67,7 @@ namespace api.Controller
                 return StatusCode(500, e.Message);
             }
         }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto loginUserDto)
