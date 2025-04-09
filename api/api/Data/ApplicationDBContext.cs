@@ -12,11 +12,25 @@ namespace api.Data
         {
         }
 
+        public DbSet<StockModel> StockModels { get; set; }
+        public DbSet<Wallet> Wallets { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
                 .UseLoggerFactory(LoggerFactory.Create(builder => { builder.AddConsole(); }))
                 .EnableSensitiveDataLogging();
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder); 
+
+            builder.Entity<Wallet>()
+                .HasOne(w => w.AppUser)
+                .WithOne(u => u.Wallet)
+                .HasForeignKey<Wallet>(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
 
