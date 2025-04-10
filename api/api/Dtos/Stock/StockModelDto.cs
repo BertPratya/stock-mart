@@ -8,5 +8,6 @@
         public string Industry { get; set; } = string.Empty;
         public string Exchange { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public int TotalShares { get; set; }
     }
 }

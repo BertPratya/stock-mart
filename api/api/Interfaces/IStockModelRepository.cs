@@ -1,4 +1,5 @@
-﻿using api.Helpers;
+﻿using api.Dtos.Stock;
+using api.Helpers;
 using api.Models;
 using api.Repositories;
 using System.Runtime.CompilerServices;
@@ -13,6 +14,8 @@ namespace api.Interfaces
         Task<StockModel> GetByIdAsync(int id);
         Task<StockModel> GetBySymbolAsync(String symbol);
         Task<bool> IsExistsAsync(int id);
+
+        Task<StockModel> UpdateStockModel(int id, UpdateStockRequestStockDto updateStockRequestStockDto);
 
     }
 }

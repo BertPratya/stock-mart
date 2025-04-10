@@ -252,9 +252,55 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TotalShares")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.ToTable("StockModels");
+                });
+
+            modelBuilder.Entity("api.Models.Transaction", b =>
+                {
+                    b.Property<int>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TransactionId"));
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StockId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("TransactionId");
+
+                    b.HasIndex("StockId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("api.Models.Wallet", b =>
@@ -341,6 +387,25 @@ namespace api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("api.Models.Transaction", b =>
+                {
+                    b.HasOne("api.Models.StockModel", "StockModel")
+                        .WithOne()
+                        .HasForeignKey("api.Models.Transaction", "StockId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.AppUser", "AppUser")
+                        .WithMany("Transactions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+
+                    b.Navigation("StockModel");
+                });
+
             modelBuilder.Entity("api.Models.Wallet", b =>
                 {
                     b.HasOne("api.Models.AppUser", "AppUser")
@@ -354,6 +419,8 @@ namespace api.Migrations
 
             modelBuilder.Entity("api.Models.AppUser", b =>
                 {
+                    b.Navigation("Transactions");
+
                     b.Navigation("Wallet");
                 });
 #pragma warning restore 612, 618

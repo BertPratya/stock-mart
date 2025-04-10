@@ -10,6 +10,7 @@ namespace api.Models
         public string Exchange { get; set; } = string.Empty;
         public DateTime CreatedOn { get; set; } = DateTime.Now;
         public string Description { get; set; } = string.Empty;
+        public int TotalShares { get; set; }
 
     }
 }

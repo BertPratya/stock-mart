@@ -12,14 +12,16 @@ namespace api.Controller
 
     public class AccountController : ControllerBase
     {
+        private readonly IWalletService _walletRepo;
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
-        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService)
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService, IWalletService walletRepo)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenService = tokenService;
+            _walletRepo = walletRepo;
         }
 
 
@@ -50,7 +52,7 @@ namespace api.Controller
                 {
                     return StatusCode(500, createResult.Errors);
                 }
-
+                await _walletRepo.CreateWallet(user.Id, user);
                 var token = _tokenService.GenerateToken(user);
                 return Ok(
                     new AppUserDto

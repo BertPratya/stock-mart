@@ -15,6 +15,8 @@ namespace api.Data
         public DbSet<StockModel> StockModels { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
 
+        public DbSet<Transaction> Transactions { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
@@ -31,7 +33,21 @@ namespace api.Data
                 .WithOne(u => u.Wallet)
                 .HasForeignKey<Wallet>(w => w.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Transaction>()
+            .HasOne(t => t.AppUser) 
+            .WithMany(u => u.Transactions) 
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade); 
+            
+            builder.Entity<Transaction>()
+                .HasOne(t => t.StockModel)
+                .WithOne()
+                .HasForeignKey<Transaction>(t => t.StockId)
+                .OnDelete(DeleteBehavior.Restrict); 
+
         }
+
 
 
     }

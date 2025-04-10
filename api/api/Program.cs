@@ -103,7 +103,8 @@ builder.Services.AddAuthentication(options =>
 // Register TokenService
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IStockModelRepository, StockModelRepository>();
-
+builder.Services.AddScoped<IWalletService, WalletRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 var app = builder.Build();
 

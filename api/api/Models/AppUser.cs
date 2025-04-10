@@ -5,6 +5,8 @@ namespace api.Models
     {
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
 
-        public Wallet? Wallet { get; set; } = null ;
+        public Wallet? Wallet { get; set; } = null;
+
+        public List<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

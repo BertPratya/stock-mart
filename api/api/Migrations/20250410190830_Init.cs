@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -50,6 +50,25 @@ namespace api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StockModels",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Symbol = table.Column<string>(type: "text", nullable: false),
+                    CompanyName = table.Column<string>(type: "text", nullable: false),
+                    Industry = table.Column<string>(type: "text", nullable: false),
+                    Exchange = table.Column<string>(type: "text", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    TotalShares = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockModels", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -158,6 +177,61 @@ namespace api.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Wallets",
+                columns: table => new
+                {
+                    WalletId = table.Column<string>(type: "text", nullable: false),
+                    Balance = table.Column<decimal>(type: "numeric", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastUpdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Currency = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Wallets", x => x.WalletId);
+                    table.ForeignKey(
+                        name: "FK_Wallets_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Transactions",
+                columns: table => new
+                {
+                    TransactionId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    StockId = table.Column<int>(type: "integer", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    TransactionType = table.Column<int>(type: "integer", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastUpdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transactions", x => x.TransactionId);
+                    table.ForeignKey(
+                        name: "FK_Transactions_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Transactions_StockModels_StockId",
+                        column: x => x.StockId,
+                        principalTable: "StockModels",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -194,6 +268,23 @@ namespace api.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_StockId",
+                table: "Transactions",
+                column: "StockId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_UserId",
+                table: "Transactions",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Wallets_UserId",
+                table: "Wallets",
+                column: "UserId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -215,7 +306,16 @@ namespace api.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Transactions");
+
+            migrationBuilder.DropTable(
+                name: "Wallets");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "StockModels");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

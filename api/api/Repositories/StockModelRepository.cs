@@ -1,4 +1,5 @@
 ﻿using api.Data;
+using api.Dtos.Stock;
 using api.Helpers;
 using api.Interfaces;
 using api.Models;
@@ -99,5 +100,27 @@ namespace api.Repositories
         {
             return await _context.StockModels.AnyAsync(x => x.Id == id);
         }
+
+        public async Task<StockModel> UpdateStockModel(int id, UpdateStockRequestStockDto updateStockRequestStockDto)
+        {
+            var stockModel = await _context.StockModels.FirstOrDefaultAsync(s => s.Id == id);
+            if (stockModel == null)
+            {
+                throw new Exception("Stock not found.");
+            }
+
+            stockModel.Symbol = updateStockRequestStockDto.Symbol;
+            stockModel.CompanyName = updateStockRequestStockDto.CompanyName;
+            stockModel.Industry = updateStockRequestStockDto.Industry;
+            stockModel.Exchange = updateStockRequestStockDto.Exchange;
+            stockModel.Description = updateStockRequestStockDto.Description;
+            stockModel.TotalShares = updateStockRequestStockDto.TotalShare;
+
+            _context.StockModels.Update(stockModel);
+            await _context.SaveChangesAsync();
+
+            return stockModel;
+        }
+
     }
 }

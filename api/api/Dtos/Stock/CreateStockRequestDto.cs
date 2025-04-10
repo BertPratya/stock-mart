@@ -15,5 +15,6 @@ namespace api.Dtos.Stock
         [Required]
         public string Exchange { get; set; } = string.Empty;
         public string Descriptipn { get; set; } = string.Empty;
+        public int TotalShares { get; set; }
     }
 }

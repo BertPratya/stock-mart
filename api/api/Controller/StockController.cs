@@ -30,7 +30,8 @@ namespace api.Controller
                 CompanyName = stock.CompanyName,
                 Industry = stock.Industry,
                 Exchange = stock.Exchange,
-                Description = stock.Description
+                Description = stock.Description,
+                TotalShares = stock.TotalShares
             }).ToList();
 
             return Ok(stockDtos);
@@ -51,7 +52,8 @@ namespace api.Controller
                 CompanyName = stock.CompanyName,
                 Industry = stock.Industry,
                 Exchange = stock.Exchange,
-                Description = stock.Description
+                Description = stock.Description,
+                TotalShares = stock.TotalShares
             };
             return Ok(stockDto);
         }
@@ -70,7 +72,8 @@ namespace api.Controller
                 Description = stockDto.Description,
                 Exchange = stockDto.Exchange,
                 Industry = stockDto.Industry,
-                Symbol =stockDto.Symbol
+                Symbol =stockDto.Symbol,
+                TotalShares = stockDto.TotalShares
             };
             await _stockRepo.CreateAsync(stockModel);
             return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, new StockModelDto
@@ -80,7 +83,8 @@ namespace api.Controller
                 CompanyName = stockModel.CompanyName,
                 Industry = stockModel.Industry,
                 Exchange = stockModel.Exchange,
-                Description = stockModel.Description
+                Description = stockModel.Description,
+                TotalShares = stockModel.TotalShares
             });
         }
 
@@ -99,7 +103,8 @@ namespace api.Controller
                 CompanyName = stock.CompanyName,
                 Industry = stock.Industry,
                 Exchange = stock.Exchange,
-                Description = stock.Description
+                Description = stock.Description,
+                TotalShares = stock.TotalShares
             };
 
             return Ok(stockDto);
@@ -120,18 +125,37 @@ namespace api.Controller
                 CompanyName = deletedStock.CompanyName,
                 Industry = deletedStock.Industry,
                 Exchange = deletedStock.Exchange,
-                Description = deletedStock.Description
+                Description = deletedStock.Description,
+                TotalShares = deletedStock.TotalShares
             });
         }
 
 
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateStockRequestStockDto updateDto)
+        {
+            if (!ModelState.IsValid) return BadRequest();
 
-
-
-
-
-
-
+            try
+            {
+                var updatedStock = await _stockRepo.UpdateStockModel(id, updateDto);
+                return Ok(new StockModelDto
+                {
+                    Id = updatedStock.Id,
+                    Symbol = updatedStock.Symbol,
+                    CompanyName = updatedStock.CompanyName,
+                    Industry = updatedStock.Industry,
+                    Exchange = updatedStock.Exchange,
+                    Description = updatedStock.Description,
+                    TotalShares = updatedStock.TotalShares
+                });
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
 
     }
 
