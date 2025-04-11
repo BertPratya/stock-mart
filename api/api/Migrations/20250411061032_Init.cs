@@ -53,22 +53,19 @@ namespace api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "StockModels",
+                name: "StockQuotes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    StockQuoteId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Symbol = table.Column<string>(type: "text", nullable: false),
-                    CompanyName = table.Column<string>(type: "text", nullable: false),
-                    Industry = table.Column<string>(type: "text", nullable: false),
-                    Exchange = table.Column<string>(type: "text", nullable: false),
-                    CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    TotalShares = table.Column<int>(type: "integer", nullable: false)
+                    StockId = table.Column<int>(type: "integer", nullable: false),
+                    CurrentPrice = table.Column<decimal>(type: "numeric", nullable: false),
+                    AvailableShares = table.Column<int>(type: "integer", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StockModels", x => x.Id);
+                    table.PrimaryKey("PK_StockQuotes", x => x.StockQuoteId);
                 });
 
             migrationBuilder.CreateTable(
@@ -201,6 +198,32 @@ namespace api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "StockModels",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Symbol = table.Column<string>(type: "text", nullable: false),
+                    CompanyName = table.Column<string>(type: "text", nullable: false),
+                    Industry = table.Column<string>(type: "text", nullable: false),
+                    Exchange = table.Column<string>(type: "text", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    TotalShares = table.Column<int>(type: "integer", nullable: false),
+                    StockQuoteId = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockModels", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StockModels_StockQuotes_StockQuoteId",
+                        column: x => x.StockQuoteId,
+                        principalTable: "StockQuotes",
+                        principalColumn: "StockQuoteId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Transactions",
                 columns: table => new
                 {
@@ -270,6 +293,12 @@ namespace api.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_StockModels_StockQuoteId",
+                table: "StockModels",
+                column: "StockQuoteId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Transactions_StockId",
                 table: "Transactions",
                 column: "StockId",
@@ -319,6 +348,9 @@ namespace api.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "StockQuotes");
         }
     }
 }

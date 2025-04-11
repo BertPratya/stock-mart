@@ -1,20 +1,19 @@
 ﻿using api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using api.Dtos;
-
-
-
+using api.Dtos.StockQuoteDto;
 using api.Dtos.Stock;
-using Microsoft.AspNetCore.Http.HttpResults;
 using api.Models;
 using api.Helpers;
+using api.Dtos.StockQuoteDto;
+
 namespace api.Controller
 {
     [Route("api/stock")]
     [ApiController]
-    public class StockController(IStockModelRepository stockRepo) : ControllerBase
+    public class StockController(IStockModelRepository stockRepo, IStockQuoteRepository stockQuoteRepo) : ControllerBase
     {
+        private readonly IStockQuoteRepository _stockQuoteRepo = stockQuoteRepo;
         private readonly IStockModelRepository _stockRepo = stockRepo;
 
         [HttpGet]
@@ -23,20 +22,30 @@ namespace api.Controller
         {
             var allStock = await _stockRepo.GetAllAsync(queryObject);
 
-            var stockDtos = allStock.Select(stock => new StockModelDto
+            var stockDtos = allStock.Select(stock => new
             {
-                Id = stock.Id,
-                Symbol = stock.Symbol,
-                CompanyName = stock.CompanyName,
-                Industry = stock.Industry,
-                Exchange = stock.Exchange,
-                Description = stock.Description,
-                TotalShares = stock.TotalShares
+                Stock = new StockModelDto
+                {
+                    Id = stock.Id,
+                    Symbol = stock.Symbol,
+                    CompanyName = stock.CompanyName,
+                    Industry = stock.Industry,
+                    Exchange = stock.Exchange,
+                    Description = stock.Description,
+                    TotalShares = stock.TotalShares
+                },
+                StockQuote = stock.StockQuote != null ? new StockQuoteDto
+                {
+                    StockQuoteId = stock.StockQuote.StockQuoteId,
+                    StockId = stock.StockQuote.StockId,
+                    CurrentPrice = stock.StockQuote.CurrentPrice,
+                    AvailableShares = stock.StockQuote.AvailableShares,
+                    LastUpdated = stock.StockQuote.LastUpdated
+                } : null
             }).ToList();
 
             return Ok(stockDtos);
         }
-
 
         [HttpGet("{id}")]
         [Authorize]
@@ -45,19 +54,31 @@ namespace api.Controller
             var stock = await _stockRepo.GetByIdAsync(id);
 
             if (stock == null) return NotFound(new { message = "Stock not found" });
-            var stockDto = new StockModelDto
-            {
-                Id = stock.Id,
-                Symbol = stock.Symbol,
-                CompanyName = stock.CompanyName,
-                Industry = stock.Industry,
-                Exchange = stock.Exchange,
-                Description = stock.Description,
-                TotalShares = stock.TotalShares
-            };
-            return Ok(stockDto);
-        }
 
+            var result = new
+            {
+                Stock = new StockModelDto
+                {
+                    Id = stock.Id,
+                    Symbol = stock.Symbol,
+                    CompanyName = stock.CompanyName,
+                    Industry = stock.Industry,
+                    Exchange = stock.Exchange,
+                    Description = stock.Description,
+                    TotalShares = stock.TotalShares
+                },
+                StockQuote = stock.StockQuote != null ? new StockQuoteDto
+                {
+                    StockQuoteId = stock.StockQuote.StockQuoteId,
+                    StockId = stock.StockQuote.StockId,
+                    CurrentPrice = stock.StockQuote.CurrentPrice,
+                    AvailableShares = stock.StockQuote.AvailableShares,
+                    LastUpdated = stock.StockQuote.LastUpdated
+                } : null
+            };
+
+            return Ok(result);
+        }
 
         [HttpPost]
         [Authorize]
@@ -72,19 +93,40 @@ namespace api.Controller
                 Description = stockDto.Description,
                 Exchange = stockDto.Exchange,
                 Industry = stockDto.Industry,
-                Symbol =stockDto.Symbol,
+                Symbol = stockDto.Symbol,
                 TotalShares = stockDto.TotalShares
             };
+
+            // Create the StockModel
             await _stockRepo.CreateAsync(stockModel);
-            return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, new StockModelDto
+
+            // Create a StockQuote for the newly created StockModel
+            var stockQuote = await _stockQuoteRepo.CreateAsync(
+                stockModel.Id, // StockId
+                stockModel.TotalShares, // AvailableShares
+                0 // Initial CurrentPrice (set to 0 or any default value)
+            );
+
+            return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, new
             {
-                Id = stockModel.Id,
-                Symbol = stockModel.Symbol,
-                CompanyName = stockModel.CompanyName,
-                Industry = stockModel.Industry,
-                Exchange = stockModel.Exchange,
-                Description = stockModel.Description,
-                TotalShares = stockModel.TotalShares
+                Stock = new StockModelDto
+                {
+                    Id = stockModel.Id,
+                    Symbol = stockModel.Symbol,
+                    CompanyName = stockModel.CompanyName,
+                    Industry = stockModel.Industry,
+                    Exchange = stockModel.Exchange,
+                    Description = stockModel.Description,
+                    TotalShares = stockModel.TotalShares
+                },
+                StockQuote = new StockQuoteDto
+                {
+                    StockQuoteId = stockQuote.StockQuoteId,
+                    StockId = stockQuote.StockId,
+                    AvailableShares = stockQuote.AvailableShares,
+                    CurrentPrice = stockQuote.CurrentPrice,
+                    LastUpdated = stockQuote.LastUpdated
+                }
             });
         }
 
@@ -96,18 +138,29 @@ namespace api.Controller
 
             if (stock == null) return NotFound(new { message = "Stock not found" });
 
-            var stockDto = new StockModelDto
+            var result = new
             {
-                Id = stock.Id,
-                Symbol = stock.Symbol,
-                CompanyName = stock.CompanyName,
-                Industry = stock.Industry,
-                Exchange = stock.Exchange,
-                Description = stock.Description,
-                TotalShares = stock.TotalShares
+                Stock = new StockModelDto
+                {
+                    Id = stock.Id,
+                    Symbol = stock.Symbol,
+                    CompanyName = stock.CompanyName,
+                    Industry = stock.Industry,
+                    Exchange = stock.Exchange,
+                    Description = stock.Description,
+                    TotalShares = stock.TotalShares
+                },
+                StockQuote = stock.StockQuote != null ? new StockQuoteDto
+                {
+                    StockQuoteId = stock.StockQuote.StockQuoteId,
+                    StockId = stock.StockQuote.StockId,
+                    CurrentPrice = stock.StockQuote.CurrentPrice,
+                    AvailableShares = stock.StockQuote.AvailableShares,
+                    LastUpdated = stock.StockQuote.LastUpdated
+                } : null
             };
 
-            return Ok(stockDto);
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
@@ -118,18 +171,28 @@ namespace api.Controller
 
             if (deletedStock == null) return NotFound(new { message = "Stock not found" });
 
-            return Ok(new StockModelDto
+            return Ok(new
             {
-                Id = deletedStock.Id,
-                Symbol = deletedStock.Symbol,
-                CompanyName = deletedStock.CompanyName,
-                Industry = deletedStock.Industry,
-                Exchange = deletedStock.Exchange,
-                Description = deletedStock.Description,
-                TotalShares = deletedStock.TotalShares
+                Stock = new StockModelDto
+                {
+                    Id = deletedStock.Id,
+                    Symbol = deletedStock.Symbol,
+                    CompanyName = deletedStock.CompanyName,
+                    Industry = deletedStock.Industry,
+                    Exchange = deletedStock.Exchange,
+                    Description = deletedStock.Description,
+                    TotalShares = deletedStock.TotalShares
+                },
+                StockQuote = deletedStock.StockQuote != null ? new StockQuoteDto
+                {
+                    StockQuoteId = deletedStock.StockQuote.StockQuoteId,
+                    StockId = deletedStock.StockQuote.StockId,
+                    CurrentPrice = deletedStock.StockQuote.CurrentPrice,
+                    AvailableShares = deletedStock.StockQuote.AvailableShares,
+                    LastUpdated = deletedStock.StockQuote.LastUpdated
+                } : null
             });
         }
-
 
         [HttpPut("{id}")]
         [Authorize]
@@ -140,15 +203,26 @@ namespace api.Controller
             try
             {
                 var updatedStock = await _stockRepo.UpdateStockModel(id, updateDto);
-                return Ok(new StockModelDto
+                return Ok(new
                 {
-                    Id = updatedStock.Id,
-                    Symbol = updatedStock.Symbol,
-                    CompanyName = updatedStock.CompanyName,
-                    Industry = updatedStock.Industry,
-                    Exchange = updatedStock.Exchange,
-                    Description = updatedStock.Description,
-                    TotalShares = updatedStock.TotalShares
+                    Stock = new StockModelDto
+                    {
+                        Id = updatedStock.Id,
+                        Symbol = updatedStock.Symbol,
+                        CompanyName = updatedStock.CompanyName,
+                        Industry = updatedStock.Industry,
+                        Exchange = updatedStock.Exchange,
+                        Description = updatedStock.Description,
+                        TotalShares = updatedStock.TotalShares
+                    },
+                    StockQuote = updatedStock.StockQuote != null ? new StockQuoteDto
+                    {
+                        StockQuoteId = updatedStock.StockQuote.StockQuoteId,
+                        StockId = updatedStock.StockQuote.StockId,
+                        CurrentPrice = updatedStock.StockQuote.CurrentPrice,
+                        AvailableShares = updatedStock.StockQuote.AvailableShares,
+                        LastUpdated = updatedStock.StockQuote.LastUpdated
+                    } : null
                 });
             }
             catch (Exception ex)
@@ -156,10 +230,5 @@ namespace api.Controller
                 return NotFound(new { message = ex.Message });
             }
         }
-
     }
-
-
-
-
 }

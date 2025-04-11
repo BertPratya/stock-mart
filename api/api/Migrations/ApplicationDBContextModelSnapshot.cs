@@ -248,6 +248,9 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("StockQuoteId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Symbol")
                         .IsRequired()
                         .HasColumnType("text");
@@ -257,7 +260,35 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StockQuoteId")
+                        .IsUnique();
+
                     b.ToTable("StockModels");
+                });
+
+            modelBuilder.Entity("api.Models.StockQuote", b =>
+                {
+                    b.Property<int>("StockQuoteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StockQuoteId"));
+
+                    b.Property<int>("AvailableShares")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("CurrentPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("StockId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("StockQuoteId");
+
+                    b.ToTable("StockQuotes");
                 });
 
             modelBuilder.Entity("api.Models.Transaction", b =>
@@ -387,6 +418,17 @@ namespace api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("api.Models.StockModel", b =>
+                {
+                    b.HasOne("api.Models.StockQuote", "StockQuote")
+                        .WithOne("StockModel")
+                        .HasForeignKey("api.Models.StockModel", "StockQuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StockQuote");
+                });
+
             modelBuilder.Entity("api.Models.Transaction", b =>
                 {
                     b.HasOne("api.Models.StockModel", "StockModel")
@@ -422,6 +464,12 @@ namespace api.Migrations
                     b.Navigation("Transactions");
 
                     b.Navigation("Wallet");
+                });
+
+            modelBuilder.Entity("api.Models.StockQuote", b =>
+                {
+                    b.Navigation("StockModel")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

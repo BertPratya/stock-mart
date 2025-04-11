@@ -11,6 +11,7 @@ namespace api.Models
         public DateTime CreatedOn { get; set; } = DateTime.Now;
         public string Description { get; set; } = string.Empty;
         public int TotalShares { get; set; }
-
+        public int StockQuoteId { get; set; }
+        public StockQuote StockQuote { get; set; }
     }
 }

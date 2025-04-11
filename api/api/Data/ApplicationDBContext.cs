@@ -5,17 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace api.Data
 {
-    public class ApplicationDBContext : IdentityDbContext<AppUser>
+    public class ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : IdentityDbContext<AppUser>(options)
     {
-        public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options)
-            : base(options)
-        {
-        }
-
         public DbSet<StockModel> StockModels { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
-
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<StockQuote> StockQuotes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -44,11 +39,18 @@ namespace api.Data
                 .HasOne(t => t.StockModel)
                 .WithOne()
                 .HasForeignKey<Transaction>(t => t.StockId)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<StockQuote>()
+                .HasOne(t => t.StockModel)
+                .WithOne(t => t.StockQuote)
+                .HasForeignKey<StockQuote>(t => t.StockId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StockModel>()
+                .HasOne(t => t.StockQuote)
+                .WithOne(t => t.StockModel)
+                .HasForeignKey<StockModel>(t => t.StockQuoteId);
         }
-
-
-
     }
 }

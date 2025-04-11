@@ -3,10 +3,8 @@ using api.Dtos.Stock;
 using api.Helpers;
 using api.Interfaces;
 using api.Models;
-using MathNet.Numerics.Optimization;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace api.Repositories
 {
@@ -23,11 +21,15 @@ namespace api.Repositories
 
         public async Task<StockModel?> DeleteAsync(int id)
         {
-            var stockModel = await _context.StockModels.FirstOrDefaultAsync(x => x.Id == id);
+            var stockModel = await _context.StockModels
+                .Include(s => s.StockQuote) // Include StockQuote
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (stockModel == null)
             {
                 return null;
             }
+
             _context.StockModels.Remove(stockModel);
             await _context.SaveChangesAsync();
             return stockModel;
@@ -35,7 +37,9 @@ namespace api.Repositories
 
         public async Task<List<StockModel>> GetAllAsync(StockModelQueryObject stockModelQueryObject)
         {
-            var stocks = _context.StockModels.AsQueryable();
+            var stocks = _context.StockModels
+                .Include(s => s.StockQuote) // Include StockQuote
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(stockModelQueryObject.Symbol))
             {
@@ -75,24 +79,31 @@ namespace api.Repositories
             return await stocks.Skip(skipNumber).Take(stockModelQueryObject.PageSize).ToListAsync();
         }
 
-
         public async Task<StockModel?> GetByIdAsync(int id)
         {
-            var stockModel = await _context.StockModels.FirstOrDefaultAsync(x => x.Id == id);
+            var stockModel = await _context.StockModels
+                .Include(s => s.StockQuote) // Include StockQuote
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (stockModel == null)
             {
                 return null;
             }
+
             return stockModel;
         }
 
         public async Task<StockModel?> GetBySymbolAsync(string symbol)
         {
-            var stockModel = await _context.StockModels.FirstOrDefaultAsync(x => x.Symbol.ToLower() == symbol.ToLower());
+            var stockModel = await _context.StockModels
+                .Include(s => s.StockQuote) // Include StockQuote
+                .FirstOrDefaultAsync(x => x.Symbol.ToLower() == symbol.ToLower());
+
             if (stockModel == null)
             {
                 return null;
             }
+
             return stockModel;
         }
 
@@ -103,7 +114,10 @@ namespace api.Repositories
 
         public async Task<StockModel> UpdateStockModel(int id, UpdateStockRequestStockDto updateStockRequestStockDto)
         {
-            var stockModel = await _context.StockModels.FirstOrDefaultAsync(s => s.Id == id);
+            var stockModel = await _context.StockModels
+                .Include(s => s.StockQuote) // Include StockQuote
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             if (stockModel == null)
             {
                 throw new Exception("Stock not found.");
@@ -121,6 +135,5 @@ namespace api.Repositories
 
             return stockModel;
         }
-
     }
 }

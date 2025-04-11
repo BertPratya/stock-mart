@@ -6,14 +6,9 @@ using api.Dtos.Stock;
 using api.Dtos.Transaction;
 namespace api.Repositories
 {
-    public class TransactionRepository : ITransactionRepository
+    public class TransactionRepository(ApplicationDBContext context) : ITransactionRepository
     {
-        private readonly ApplicationDBContext _context;
-
-        public TransactionRepository(ApplicationDBContext context)
-        {
-            _context = context;
-        }
+        private readonly ApplicationDBContext _context = context;
 
         public async Task<Transaction> CreateAsync(Transaction transaction)
         {

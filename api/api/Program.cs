@@ -105,6 +105,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IStockModelRepository, StockModelRepository>();
 builder.Services.AddScoped<IWalletService, WalletRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IStockQuoteRepository, StockQuoteRepository>();
 
 var app = builder.Build();
 
