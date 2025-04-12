@@ -1,10 +1,10 @@
 import './App.css'
 import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
-import Topbar from "./pages/auth/global/Topbar";
-import Sidebar from './pages/auth/global/Sidebar';
+import Topbar from './pages/global/Topbar';
+import Sidebar from './pages/global/Sidebar';
 import { BrowserRouter as Router } from 'react-router-dom';
-
+import TradingPage from './pages/trading';
 function App() {
   const [theme, colorMode] = useMode();
 
@@ -27,12 +27,15 @@ function App() {
                 <Box 
                   component="main" 
                   sx={{ 
-                    flexGrow: 1, 
-                    p: 3,
+                    flexGrow: 1,
+                    pt: 0, px: 3, pb: 3,
                     bgcolor: 'background.default',
-                    overflow: 'auto'
+                    overflow: 'hidden'
                   }}
                 >
+                  <TradingPage></TradingPage>
+
+
                   {/* Your page content will go here */}
                 </Box>
               </Box>

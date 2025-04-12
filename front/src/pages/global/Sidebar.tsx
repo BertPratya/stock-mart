@@ -9,7 +9,7 @@ import StarIcon from '@mui/icons-material/Star';
 import { ProSidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { Link } from "react-router-dom";
 import "react-pro-sidebar/dist/css/styles.css";
-import { tokens } from '../../../theme';
+import { tokens } from '../../theme';
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
@@ -31,14 +31,14 @@ const Item: React.FC<{ title: string; to: string; icon: React.ReactNode; selecte
 const Sidebar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [selected, setSelected] = useState("Dashboard");
 
   return (
 <Box
   sx={{
     "& .pro-sidebar-inner": {
-      background: `${colors.primary[400]} !important`,
+      background: `${colors.primary[900]} !important`,
     },
     "& .pro-icon-wrapper": {
       backgroundColor: "transparent !important",
