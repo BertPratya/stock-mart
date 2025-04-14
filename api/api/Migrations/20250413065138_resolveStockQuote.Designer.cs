@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using api.Data;
@@ -11,9 +12,11 @@ using api.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250413065138_resolveStockQuote")]
+    partial class resolveStockQuote
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -269,25 +272,16 @@ namespace api.Migrations
                         .HasColumnType("integer")
                         .HasColumnOrder(0);
 
-                    b.Property<DateTime>("TimeStamp")
+                    b.Property<DateTime>("RecordedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnOrder(1);
 
-                    b.Property<decimal>("Close")
+                    b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal>("High")
-                        .HasColumnType("numeric");
+                    b.HasKey("StockId", "RecordedAt");
 
-                    b.Property<decimal>("Low")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("Open")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("StockId", "TimeStamp");
-
-                    b.HasIndex("StockId", "TimeStamp")
+                    b.HasIndex("StockId", "RecordedAt")
                         .IsUnique();
 
                     b.ToTable("StockPriceHistories");

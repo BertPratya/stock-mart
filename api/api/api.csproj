@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -25,12 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <None Include="Dtos\Stock\CreateStockRequestDto.cs" />
+    <None Include="Models\StockModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Dtos\Stock\CreateStockRequestDto.cs" />
-    <None Include="Models\StockModel.cs" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

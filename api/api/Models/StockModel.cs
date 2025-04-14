@@ -15,3 +15,4 @@ namespace api.Models
         public StockQuote StockQuote { get; set; }
     }
 }
+

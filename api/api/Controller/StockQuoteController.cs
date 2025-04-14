@@ -6,16 +6,17 @@ using api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using api.Dtos.StockQuote;
+using api.Dtos.Stock;
 
 namespace api.Controller
 {
     [Route("api/stockquote")]
     [ApiController]
     [Authorize]
-    public class StockQuoteController(IStockQuoteRepository stockQuoteRepo) : ControllerBase
+    public class StockQuoteController(IStockQuoteRepository stockQuoteRepo, IStockPriceHistoryRepository stockPriceHistoryRepo) : ControllerBase
     {
         private readonly IStockQuoteRepository _stockQuoteRepo = stockQuoteRepo;
-
+        private readonly IStockPriceHistoryRepository _stockPriceHistoryRepo = stockPriceHistoryRepo;
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateStockQuoteDto createStockQuoteDto)
         {
@@ -58,6 +59,17 @@ namespace api.Controller
                 return NotFound(new { message = "StockQuote not found" });
             }
 
+            var stockDto = new StockModelDto
+            {
+                Id = stockQuote.StockModel.Id,
+                Symbol = stockQuote.StockModel.Symbol,
+                CompanyName = stockQuote.StockModel.CompanyName,
+                Industry = stockQuote.StockModel.Industry,
+                Exchange = stockQuote.StockModel.Exchange,
+                Description = stockQuote.StockModel.Description,
+                TotalShares = stockQuote.StockModel.TotalShares
+            };
+
             var stockQuoteDto = new StockQuoteDto
             {
                 StockQuoteId = stockQuote.StockQuoteId,
@@ -67,7 +79,7 @@ namespace api.Controller
                 LastUpdated = stockQuote.LastUpdated
             };
 
-            return Ok(stockQuoteDto);
+            return Ok(new { Stock = stockDto, StockQuote = stockQuoteDto });
         }
 
         [HttpPut("update-price/{id}")]
@@ -81,6 +93,8 @@ namespace api.Controller
             try
             {
                 var updatedStockQuote = await _stockQuoteRepo.UpdatePriceAsync(id, updatePriceDto.NewPrice);
+
+
 
                 var stockQuoteDto = new StockQuoteDto
                 {
@@ -136,6 +150,39 @@ namespace api.Controller
             }
         }
 
+
+        [HttpGet("stock/{stockId}")]
+        public async Task<IActionResult> GetByStockId(int stockId)
+        {
+            var stockQuote = await _stockQuoteRepo.GetByStockIdAsync(stockId);
+
+            if (stockQuote == null)
+            {
+                return NotFound(new { message = "StockQuote not found for the given StockId" });
+            }
+
+            var stockDto = new StockModelDto
+            {
+                Id = stockQuote.StockModel.Id,
+                Symbol = stockQuote.StockModel.Symbol,
+                CompanyName = stockQuote.StockModel.CompanyName,
+                Industry = stockQuote.StockModel.Industry,
+                Exchange = stockQuote.StockModel.Exchange,
+                Description = stockQuote.StockModel.Description,
+                TotalShares = stockQuote.StockModel.TotalShares
+            };
+
+            var stockQuoteDto = new StockQuoteDto
+            {
+                StockQuoteId = stockQuote.StockQuoteId,
+                StockId = stockQuote.StockId,
+                CurrentPrice = stockQuote.CurrentPrice,
+                AvailableShares = stockQuote.AvailableShares,
+                LastUpdated = stockQuote.LastUpdated
+            };
+
+            return Ok(new { Stock = stockDto, StockQuote = stockQuoteDto });
+        }
 
     }
 }

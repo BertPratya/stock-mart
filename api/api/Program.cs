@@ -1,23 +1,27 @@
 using api.Data;
+using api.Hubs;
 using api.Interfaces;
 using api.Models;
 using api.Repositories;
 using api.Services;
+using api.BackgroundServices.Simulators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using api.Trackers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins", policy =>
+    options.AddPolicy("AllowSpecificOrigins", policy =>
     {
-        policy.AllowAnyOrigin()  // Allows all origins
-              .AllowAnyHeader()  // Allows any header
-              .AllowAnyMethod(); // Allows any HTTP method (GET, POST, etc.)
+        policy.WithOrigins("http://localhost:5173") 
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); 
     });
 });
 
@@ -25,6 +29,7 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // Add Swagger/OpenAPI support
 builder.Services.AddEndpointsApiExplorer();
@@ -106,13 +111,18 @@ builder.Services.AddScoped<IStockModelRepository, StockModelRepository>();
 builder.Services.AddScoped<IWalletService, WalletRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IStockQuoteRepository, StockQuoteRepository>();
+builder.Services.AddScoped<IStockPriceHistoryRepository, StockPriceHistoryRepository>();
+
+
+builder.Services.AddSingleton<SubscriptionTracker>();
+
+builder.Services.AddHostedService<CandleStickBackGroundService>();
+
+
+
 
 var app = builder.Build();
 
-
-
-
-app.UseCors("AllowAllOrigins");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Environment.IsProduction())
 {
@@ -123,9 +133,15 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Enviro
 
 
 app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigins");
 
 app.UseAuthorization();
-
-app.MapControllers();
+app.UseRouting();
+app.UseAuthorization();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHub<DataHub>("/chart");
+    endpoints.MapControllers();
+});
 
 app.Run();

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using api.Data;
@@ -11,9 +12,11 @@ using api.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250411073013_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -260,6 +263,9 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StockQuoteId")
+                        .IsUnique();
+
                     b.ToTable("StockModels");
                 });
 
@@ -269,25 +275,16 @@ namespace api.Migrations
                         .HasColumnType("integer")
                         .HasColumnOrder(0);
 
-                    b.Property<DateTime>("TimeStamp")
+                    b.Property<DateTime>("RecordedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnOrder(1);
 
-                    b.Property<decimal>("Close")
+                    b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal>("High")
-                        .HasColumnType("numeric");
+                    b.HasKey("StockId", "RecordedAt");
 
-                    b.Property<decimal>("Low")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("Open")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("StockId", "TimeStamp");
-
-                    b.HasIndex("StockId", "TimeStamp")
+                    b.HasIndex("StockId", "RecordedAt")
                         .IsUnique();
 
                     b.ToTable("StockPriceHistories");
@@ -314,9 +311,6 @@ namespace api.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("StockQuoteId");
-
-                    b.HasIndex("StockId")
-                        .IsUnique();
 
                     b.ToTable("StockQuotes");
                 });
@@ -448,22 +442,22 @@ namespace api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("api.Models.StockModel", b =>
+                {
+                    b.HasOne("api.Models.StockQuote", "StockQuote")
+                        .WithOne("StockModel")
+                        .HasForeignKey("api.Models.StockModel", "StockQuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StockQuote");
+                });
+
             modelBuilder.Entity("api.Models.StockPriceHistory", b =>
                 {
                     b.HasOne("api.Models.StockModel", "StockModel")
                         .WithMany()
                         .HasForeignKey("StockId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("StockModel");
-                });
-
-            modelBuilder.Entity("api.Models.StockQuote", b =>
-                {
-                    b.HasOne("api.Models.StockModel", "StockModel")
-                        .WithOne("StockQuote")
-                        .HasForeignKey("api.Models.StockQuote", "StockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -507,9 +501,9 @@ namespace api.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("api.Models.StockModel", b =>
+            modelBuilder.Entity("api.Models.StockQuote", b =>
                 {
-                    b.Navigation("StockQuote")
+                    b.Navigation("StockModel")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

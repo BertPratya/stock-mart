@@ -19,7 +19,6 @@ interface LoginFormProps {
   const colors = tokens(theme.palette.mode);
   const [formSubmitted, setFormSubmitted] = useState(false);
   
-  // Formik initialization
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -44,19 +43,16 @@ interface LoginFormProps {
     },
   });
   
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormSubmitted(true);
     formik.handleSubmit();
   };
 
-  // Only show errors after form submission attempt
   const showError = (fieldName: keyof typeof formik.values) => {
       return formSubmitted && Boolean(formik.errors[fieldName]);
   };
 
-  // Get error message if should be shown
   const getErrorMessage = (fieldName: keyof typeof formik.values) => {
       return formSubmitted ? formik.errors[fieldName] : '';
   };
@@ -79,7 +75,6 @@ interface LoginFormProps {
         Login
       </Typography>
       
-      {/* Email Input Field */}
       <TextField
         fullWidth
         margin="normal"
@@ -89,32 +84,30 @@ interface LoginFormProps {
         type="email"
         value={formik.values.email}
         onChange={formik.handleChange}
-        // Removed onBlur handler
         error={showError('email')} 
         helperText={getErrorMessage('email')}
         sx={{
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                borderColor: colors.grey[300], // Default border color
+                borderColor: colors.grey[300], 
               },
               '&:hover fieldset': {
-                borderColor: colors.grey[200], // Border color on hover
+                borderColor: colors.grey[200], 
               },
               '&.Mui-focused fieldset': {
-                borderColor: colors.blueAccent[400], // Border color on focus
+                borderColor: colors.blueAccent[400],
               },
             },
             '& .MuiInputBase-input': {
-              color: colors.primary[500], // Text color of the input
+              color: colors.primary[500],
             },
-            '& .MuiInputLabel-root': { // This targets the label text
-              color: colors.primary[300], // Change label text color
+            '& .MuiInputLabel-root': { 
+              color: colors.primary[300], 
             }
             
           }}
         />
       
-      {/* Password Input Field */}
       <TextField
         fullWidth
         margin="normal"
@@ -124,26 +117,25 @@ interface LoginFormProps {
         type="password"
         value={formik.values.password}
         onChange={formik.handleChange}
-        // Removed onBlur handler
         error={showError('password')}
         helperText={getErrorMessage('password')}
         sx={{
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                borderColor: colors.grey[300], // Default border color
+                borderColor: colors.grey[300], 
               },
               '&:hover fieldset': {
-                borderColor: colors.grey[200], // Border color on hover
+                borderColor: colors.grey[200],
               },
               '&.Mui-focused fieldset': {
-                borderColor: colors.blueAccent[400], // Border color on focus
+                borderColor: colors.blueAccent[400], 
               },
             },
             '& .MuiInputBase-input': {
-              color: colors.primary[500], // Text color of the input
+              color: colors.primary[500], 
             },
-            '& .MuiInputLabel-root': { // This targets the label text
-              color: colors.primary[300], // Change label text color
+            '& .MuiInputLabel-root': { 
+              color: colors.primary[300], 
             }
             
           }}
@@ -163,8 +155,8 @@ interface LoginFormProps {
   Don't have an account yet?{' '}
 <span 
     style={{ 
-        color: 'blue',   // Highlight color
-        fontWeight: 'bold',   // Optional: make it bold for more emphasis
+        color: 'blue',   
+        fontWeight: 'bold',  
         cursor: 'pointer' 
     }} 
     onMouseEnter={(e) => (e.target as HTMLElement).style.textDecoration = 'underline'} 

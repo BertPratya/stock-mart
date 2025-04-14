@@ -1,340 +1,179 @@
-import React, {use, useState,useRef, useEffect} from 'react';
-import { Box, Button, TextField,Typography,ThemeProvider,CssBaseline } from '@mui/material';
-import {createTheme, useTheme}  from '@mui/material/styles'
-import { ColorModeContext, tokens } from '../../theme';
-import { ColorType, createChart,AreaSeries, CandlestickSeries } from 'lightweight-charts';
 
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { tokens } from '../../theme';
+import { CandlestickSeries, ColorType, createChart } from 'lightweight-charts';
+import SearchBar from './searchbar';
+import { useSelector, useDispatch, TypedUseSelectorHook } from 'react-redux';
+import { setupHandlers, startConnection, subscribeToStock } from '../../services/dataHubService';
+import type { RootState } from '../../redux/store';
+import { getStockPriceHistory } from '../../services/tradingService';
+import { initial } from 'lodash';
+import { timeStamp } from 'console';
 interface ChartBoxProps {
-    isCollapsed?: boolean; 
-  }
-
-
-
-let randomFactor = 25 + Math.random() * 25;
-const samplePoint = (i: number) =>
-    i *
-        (0.5 +
-            Math.sin(i / 1) * 0.2 +
-            Math.sin(i / 2) * 0.4 +
-            Math.sin(i / randomFactor) * 0.8 +
-            Math.sin(i / 50) * 0.5) +
-    200 +
-    i * 2;
-
-function generateData(
-    numberOfCandles = 500,
-    updatesPerCandle = 5,
-    startAt = 100
-) {
-    const createCandle = (val: number, time: number) => ({
-        time: new Date(time * 1000).toISOString().split('T')[0],
-        open: val,
-        high: val,
-        low: val,
-        close: val,
-    });
-
-    const updateCandle = (candle: { time: string; open: number; high: number; low: number; close: number }, val: number) => ({
-        time: candle.time,
-        close: val,
-        open: candle.open,
-        low: Math.min(candle.low, val),
-        high: Math.max(candle.high, val),
-    });
-
-    randomFactor = 25 + Math.random() * 25;
-    const date = new Date(Date.UTC(2018, 0, 1, 12, 0, 0, 0));
-    const numberOfPoints = numberOfCandles * updatesPerCandle;
-    const initialData = [];
-    const realtimeUpdates = [];
-    let lastCandle;
-    let previousValue = samplePoint(-1);
-    for (let i = 0; i < numberOfPoints; ++i) {
-        if (i % updatesPerCandle === 0) {
-            date.setUTCDate(date.getUTCDate() + 1);
-        }
-        const time = (date.getTime() / 1000).toString(); // Convert to string for compatibility
-        let value = samplePoint(i);
-        const diff = (value - previousValue) * Math.random();
-        value = previousValue + diff;
-        previousValue = value;
-        if (i % updatesPerCandle === 0) {
-            const candle = createCandle(value, Number(time));
-            lastCandle = candle;
-            if (i >= startAt) {
-                realtimeUpdates.push(candle);
-            }
-        } else {
-            if (lastCandle) {
-                const newCandle = updateCandle(lastCandle, value);
-                lastCandle = newCandle;
-                if (i >= startAt) {
-                    realtimeUpdates.push(newCandle);
-                } else if ((i + 1) % updatesPerCandle === 0) {
-                    initialData.push(newCandle);
-                }
-            }
-        }
-    }
-
-    return {
-        initialData,
-        realtimeUpdates,
-    };
+    isCollapsed?: boolean;
 }
 
+const formatShareCount = (shares?: number): string => {
+    if (shares === undefined || shares === null) return 'N/A';
+    if (shares < 1000) return shares.toString();
+    if (shares < 1000000) return `${(shares / 1000).toFixed(2)}K`;
+    return `${(shares / 1000000).toFixed(2)}M`;
+};
 
-
-  const ChartBox: React.FC<ChartBoxProps> = ({isCollapsed}) => {
+const ChartBox: React.FC<ChartBoxProps> = ({ isCollapsed }) => {
     const theme = useTheme();
-    const chartContainer = useRef<HTMLDivElement>(null);
     const colors = tokens(theme.palette.mode);
-    useEffect (() => {
+    const chartContainer = useRef<HTMLDivElement>(null);
+    const chartRef = useRef<any>(null);
+    const seriesRef = useRef<any>(null);
 
+    const useTypedSelector: TypedUseSelectorHook<RootState> = useSelector;
+    const dispatch = useDispatch();
 
+    const stockId = useTypedSelector((state) => state.trading.stockId);
+    const symbol = useTypedSelector((state) => state.trading.symbol);
+    const name = useTypedSelector((state) => state.trading.companyName);
+    const sharesAvailable = useTypedSelector((state) => state.trading.availableShares);
+    const price = useTypedSelector((state) => state.trading.price);
+    const realTimePrice = useSelector((state: any) => state.realTimePrice);
 
+    const [isSearchBarAppear, setSearchBarAppear] = useState(false);
+    const [currentStock, setCurrentStock] = useState({ symbol: "AAPL", name: "Apple Inc.", sharesAvailable: 1200, price: 150 });
 
-            if (!chartContainer.current){
-                console.log("eeeee");
-                return
+    const toggleSearchBar = () => setSearchBarAppear((prev) => !prev);
+
+    useEffect(() => {
+        const nextStock = { symbol, name, sharesAvailable, price };
+        setCurrentStock(nextStock);
+    }, [symbol, name, sharesAvailable, price]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const initializeConnection = async () => {
+            try {
+                await startConnection();
+                if (!isMounted) return;
+                await setupHandlers(dispatch);
+                await subscribeToStock(317);
+                console.log("Successfully subscribed to stocks");
+            } catch (error) {
+                console.error("Failed to initialize SignalR:", error);
             }
-            const chart = createChart(chartContainer.current, {
-                layout: {
-                    background: { type: ColorType.Solid, color: "transparent" },
-                    attributionLogo: false,
-                    textColor: colors.grey[400]
-                },
-                grid:{
-                    vertLines:{
-                        color: colors.primary[400]
-                    },
-                    horzLines:{
-                        color: colors.primary[400]
-                    }, 
-                },
+        };
+        initializeConnection();
+        return () => { isMounted = false; };
+    }, [dispatch]);
 
-
-                width:chartContainer.current.clientWidth,
-                height: chartContainer.current.clientHeight,
-
-                
-            });
-            const series = chart.addSeries(CandlestickSeries, {
-                upColor: '#26a69a',
-                downColor: '#ef5350',
-                borderVisible: false,
-                wickUpColor: '#26a69a',
-                wickDownColor: '#ef5350',
-            });
-
-            const data = generateData(2500, 20, 1000);
-            series.setData(data.initialData);
-            chart.timeScale().fitContent();
-
-            function* getNextRealtimeUpdate(realtimeData: Array<{ time: string; open: number; high: number; low: number; close: number }>) {
-                for (const dataPoint of realtimeData) {
-                    yield dataPoint;
-                }
-                return null;
+    useEffect(() => {
+        if (!chartContainer.current || chartRef.current || stockId === -999) return; 
+    
+        const chart = createChart(chartContainer.current, {
+            layout: {
+                background: { type: ColorType.Solid, color: 'transparent' },
+                textColor: colors.grey[400],
+            },
+            timeScale: {
+                timeVisible: true,
+                secondsVisible: true,
+            },
+            grid: {
+                vertLines: { color: colors.primary[400] },
+                horzLines: { color: colors.primary[400] },
+            },
+            width: chartContainer.current.clientWidth,
+            height: chartContainer.current.clientHeight,
+        });
+    
+        const series = chart.addSeries(CandlestickSeries, {
+            upColor: '#26a69a',
+            downColor: '#ef5350',
+            borderVisible: false,
+            wickUpColor: '#26a69a',
+            wickDownColor: '#ef5350',
+        });
+    
+        chartRef.current = chart;
+        seriesRef.current = series;
+    
+        const loadInitialData = async () => {
+            try {
+                const stockHistory = await getStockPriceHistory(stockId);
+                const formattedData = stockHistory.map((item: any) => ({
+                    time: Math.floor(new Date(item.timeStamp).getTime() / 1000),
+                    open: item.open,
+                    high: item.high,
+                    low: item.low,
+                    close: item.close,
+                }));
+    
+                series.setData(formattedData);
+                chart.timeScale().fitContent();
+            } catch (error) {
+                console.error('Error loading initial chart data:', error);
             }
-            const streamingDataProvider = getNextRealtimeUpdate(data.realtimeUpdates);
-            const intervalID = setInterval(() => {
-                const update = streamingDataProvider.next();
-                if (update.done) {
-                    clearInterval(intervalID);
-                    return;
-                }
-                series.update(update.value);
-            }, 100);
-           
-            return () => {
+        };
+    
+        loadInitialData();
+    
+        return () => {
+            chart.remove();
+            chartRef.current = null;
+            seriesRef.current = null;
+        };
+    }, [theme.palette.mode, isCollapsed, stockId]);
+    
+    useEffect(() => {
+        if (realTimePrice?.open != null) {
+            setCurrentStock((prevStock) => ({
+                ...prevStock,
+                price: realTimePrice.open,
+            }));
+        }
+    }, [realTimePrice?.open]);
 
-                chart.remove();
-            };
-
-
-
-    },[theme.palette.mode,isCollapsed])
+    useEffect(() => {
+        const { low, high, open, close, timeStamp } = realTimePrice || {};
+        if (low != null && high != null && open != null && close != null && timeStamp && seriesRef.current) {
+            const unixTime = Math.floor(new Date(timeStamp).getTime() / 1000);
+            const newCandle = { time: unixTime, open, high, low, close };
+            seriesRef.current.update(newCandle); 
+        }
+    }, [realTimePrice]);
 
     return (
-        <Box 
-            ref={chartContainer}
-            sx={{
-                width: '100%',
-                height: '100%',
-                position: 'relative',
-            }}
-        />
+        <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
+            <Box onClick={toggleSearchBar}
+                sx={{
+                    position: 'absolute',
+                    top: 10,
+                    left: 10,
+                    backgroundColor: colors.primary[900],
+                    color: colors.grey[100],
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+                    zIndex: 10,
+                    cursor: 'pointer'
+                }}
+            >
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    {currentStock.name} ({currentStock.symbol})
+                </Typography>
+                <Typography variant="body2">Price: ${currentStock.price.toFixed(2)}</Typography>
+                <Typography variant="body2">Shares Available: {formatShareCount(currentStock.sharesAvailable)}</Typography>
+            </Box>
+
+            {isSearchBarAppear && <SearchBar />}
+
+            <Box
+                onClick={isSearchBarAppear ? toggleSearchBar : undefined}
+                ref={chartContainer}
+                sx={{ width: '100%', height: '100%', position: 'relative' }}
+            />
+        </Box>
     );
 };
 
 export default ChartBox;
-
-
-// Lightweight Charts™ Example: Realtime updates
-// https://tradingview.github.io/lightweight-charts/tutorials/demos/realtime-updates
-
-
-// let randomFactor = 25 + Math.random() * 25;
-// const samplePoint = i =>
-//     i *
-//         (0.5 +
-//             Math.sin(i / 1) * 0.2 +
-//             Math.sin(i / 2) * 0.4 +
-//             Math.sin(i / randomFactor) * 0.8 +
-//             Math.sin(i / 50) * 0.5) +
-//     200 +
-//     i * 2;
-
-// function generateData(
-//     numberOfCandles = 500,
-//     updatesPerCandle = 5,
-//     startAt = 100
-// ) {
-//     const createCandle = (val, time) => ({
-//         time,
-//         open: val,
-//         high: val,
-//         low: val,
-//         close: val,
-//     });
-
-//     const updateCandle = (candle, val) => ({
-//         time: candle.time,
-//         close: val,
-//         open: candle.open,
-//         low: Math.min(candle.low, val),
-//         high: Math.max(candle.high, val),
-//     });
-
-//     randomFactor = 25 + Math.random() * 25;
-//     const date = new Date(Date.UTC(2018, 0, 1, 12, 0, 0, 0));
-//     const numberOfPoints = numberOfCandles * updatesPerCandle;
-//     const initialData = [];
-//     const realtimeUpdates = [];
-//     let lastCandle;
-//     let previousValue = samplePoint(-1);
-//     for (let i = 0; i < numberOfPoints; ++i) {
-//         if (i % updatesPerCandle === 0) {
-//             date.setUTCDate(date.getUTCDate() + 1);
-//         }
-//         const time = date.getTime() / 1000;
-//         let value = samplePoint(i);
-//         const diff = (value - previousValue) * Math.random();
-//         value = previousValue + diff;
-//         previousValue = value;
-//         if (i % updatesPerCandle === 0) {
-//             const candle = createCandle(value, time);
-//             lastCandle = candle;
-//             if (i >= startAt) {
-//                 realtimeUpdates.push(candle);
-//             }
-//         } else {
-//             const newCandle = updateCandle(lastCandle, value);
-//             lastCandle = newCandle;
-//             if (i >= startAt) {
-//                 realtimeUpdates.push(newCandle);
-//             } else if ((i + 1) % updatesPerCandle === 0) {
-//                 initialData.push(newCandle);
-//             }
-//         }
-//     }
-
-//     return {
-//         initialData,
-//         realtimeUpdates,
-//     };
-// }
-
-// const chartOptions = {
-//     layout: {
-//         textColor: 'black',
-//         background: { type: 'solid', color: 'white' },
-//     },
-//     height: 200,
-// };
-// const container = document.getElementById('container');
-// /** @type {import('lightweight-charts').IChartApi} */
-// const chart = createChart(container, chartOptions);
-
-// // Only needed within demo page
-// // eslint-disable-next-line no-undef
-// window.addEventListener('resize', () => {
-//     chart.applyOptions({ height: 200 });
-// });
-
-// const series = chart.addSeries(CandlestickSeries, {
-//     upColor: '#26a69a',
-//     downColor: '#ef5350',
-//     borderVisible: false,
-//     wickUpColor: '#26a69a',
-//     wickDownColor: '#ef5350',
-// });
-
-// const data = generateData(2500, 20, 1000);
-
-// series.setData(data.initialData);
-// chart.timeScale().fitContent();
-// chart.timeScale().scrollToPosition(5);
-
-// // simulate real-time data
-// function* getNextRealtimeUpdate(realtimeData) {
-//     for (const dataPoint of realtimeData) {
-//         yield dataPoint;
-//     }
-//     return null;
-// }
-// const streamingDataProvider = getNextRealtimeUpdate(data.realtimeUpdates);
-
-// const intervalID = setInterval(() => {
-//     const update = streamingDataProvider.next();
-//     if (update.done) {
-//         clearInterval(intervalID);
-//         return;
-//     }
-//     series.update(update.value);
-// }, 100);
-
-// const styles = `
-//     .buttons-container {
-//         display: flex;
-//         flex-direction: row;
-//         gap: 8px;
-//     }
-//     .buttons-container button {
-//         all: initial;
-//         font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu,
-//             sans-serif;
-//         font-size: 16px;
-//         font-style: normal;
-//         font-weight: 510;
-//         line-height: 24px; /* 150% */
-//         letter-spacing: -0.32px;
-//         padding: 8px 24px;
-//         color: rgba(19, 23, 34, 1);
-//         background-color: rgba(240, 243, 250, 1);
-//         border-radius: 8px;
-//         cursor: pointer;
-//     }
-
-//     .buttons-container button:hover {
-//         background-color: rgba(224, 227, 235, 1);
-//     }
-
-//     .buttons-container button:active {
-//         background-color: rgba(209, 212, 220, 1);
-//     }
-// `;
-
-// const stylesElement = document.createElement('style');
-// stylesElement.innerHTML = styles;
-// container.appendChild(stylesElement);
-
-// const buttonsContainer = document.createElement('div');
-// buttonsContainer.classList.add('buttons-container');
-// const button = document.createElement('button');
-// button.innerText = 'Go to realtime';
-// button.addEventListener('click', () => chart.timeScale().scrollToRealTime());
-// buttonsContainer.appendChild(button);
-
-// container.appendChild(buttonsContainer);

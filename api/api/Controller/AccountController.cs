@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using api.Services;
 using api.Interfaces;
 using api.Dtos.AppUser;
+using api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 namespace api.Controller
 {
     [Route("api/[controller]")]
@@ -98,6 +100,14 @@ namespace api.Controller
             });
 
         }
+
+        //[HttpPost("test-broadcast")]
+        //public async Task<IActionResult> TestBroadcast()
+        //{
+        //    var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<DataHub>>();
+        //    await hubContext.Clients.All.SendAsync("ReceivePriceUpdate", "MSFT", 123.45m);
+        //    return Ok("Broadcast triggered");
+        //}
 
 
 

@@ -2,6 +2,7 @@
 using api.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Reflection.Emit;
 
 namespace api.Data
 {
@@ -11,6 +12,7 @@ namespace api.Data
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<StockQuote> StockQuotes { get; set; }
+        public DbSet<StockPriceHistory> StockPriceHistories { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -50,7 +52,20 @@ namespace api.Data
             builder.Entity<StockModel>()
                 .HasOne(t => t.StockQuote)
                 .WithOne(t => t.StockModel)
-                .HasForeignKey<StockModel>(t => t.StockQuoteId);
+                .HasForeignKey<StockQuote>(q => q.StockId);
+
+            builder.Entity<StockPriceHistory>()
+                .HasKey(sh => new { sh.StockId, sh.TimeStamp });
+
+            builder.Entity<StockPriceHistory>()
+                .HasIndex(sh => new { sh.StockId, sh.TimeStamp })
+                .IsUnique(); 
+
+            builder.Entity<StockPriceHistory>()
+                .HasOne(sh => sh.StockModel)
+                .WithMany()
+                .HasForeignKey(sh => sh.StockId);
+
         }
     }
 }

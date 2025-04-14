@@ -12,9 +12,9 @@ const Topbar: React.FC = () => {
   const colorMode = useContext(ColorModeContext);
   return (
     <Box
-      width="100%" // full width of topbar
+      width="100%" 
       display="flex"
-      justifyContent="flex-end" // push content to the right
+      justifyContent="flex-end" 
       p={2}
       pb={0}
       pt={1}

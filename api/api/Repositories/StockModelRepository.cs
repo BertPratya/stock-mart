@@ -38,17 +38,13 @@ namespace api.Repositories
         public async Task<List<StockModel>> GetAllAsync(StockModelQueryObject stockModelQueryObject)
         {
             var stocks = _context.StockModels
-                .Include(s => s.StockQuote) // Include StockQuote
+                .Include(s => s.StockQuote) 
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(stockModelQueryObject.Symbol))
+            if (!string.IsNullOrWhiteSpace(stockModelQueryObject.Query))
             {
-                stocks = stocks.Where(s => s.Symbol.ToLower().Contains(stockModelQueryObject.Symbol.ToLower()));
-            }
-
-            if (!string.IsNullOrWhiteSpace(stockModelQueryObject.CompanyName))
-            {
-                stocks = stocks.Where(s => s.CompanyName.ToLower().Contains(stockModelQueryObject.CompanyName.ToLower()));
+                var searchTerm = stockModelQueryObject.Query.ToLower();
+                stocks = stocks.Where(s => s.Symbol.ToLower().Contains(searchTerm) || s.CompanyName.ToLower().Contains(searchTerm));
             }
 
             if (stockModelQueryObject.SortBy != null)
@@ -61,16 +57,16 @@ namespace api.Repositories
                             : stocks.OrderBy(s => s.Symbol.ToLower());
                         break;
 
-                    case StockSortBy.CompanyName:
+                    case StockSortBy.Price:
                         stocks = stockModelQueryObject.IsDecsending
-                            ? stocks.OrderByDescending(s => s.CompanyName.ToLower())
-                            : stocks.OrderBy(s => s.CompanyName.ToLower());
+                            ? stocks.OrderByDescending(s => s.StockQuote.CurrentPrice)
+                            : stocks.OrderBy(s => s.StockQuote.CurrentPrice);
                         break;
 
                     default:
                         stocks = stockModelQueryObject.IsDecsending
-                            ? stocks.OrderByDescending(s => s.CompanyName.ToLower())
-                            : stocks.OrderBy(s => s.CompanyName.ToLower());
+                            ? stocks.OrderByDescending(s => s.Symbol.ToLower())
+                            : stocks.OrderBy(s => s.Symbol.ToLower());
                         break;
                 }
             }

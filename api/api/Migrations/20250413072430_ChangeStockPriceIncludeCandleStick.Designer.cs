@@ -12,8 +12,8 @@ using api.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250411061032_Init")]
-    partial class Init
+    [Migration("20250413072430_ChangeStockPriceIncludeCandleStick")]
+    partial class ChangeStockPriceIncludeCandleStick
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -263,10 +263,37 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StockQuoteId")
+                    b.ToTable("StockModels");
+                });
+
+            modelBuilder.Entity("api.Models.StockPriceHistory", b =>
+                {
+                    b.Property<int>("StockId")
+                        .HasColumnType("integer")
+                        .HasColumnOrder(0);
+
+                    b.Property<DateTime>("TimeStamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnOrder(1);
+
+                    b.Property<decimal>("Close")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("High")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("Low")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("Open")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("StockId", "TimeStamp");
+
+                    b.HasIndex("StockId", "TimeStamp")
                         .IsUnique();
 
-                    b.ToTable("StockModels");
+                    b.ToTable("StockPriceHistories");
                 });
 
             modelBuilder.Entity("api.Models.StockQuote", b =>
@@ -290,6 +317,9 @@ namespace api.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("StockQuoteId");
+
+                    b.HasIndex("StockId")
+                        .IsUnique();
 
                     b.ToTable("StockQuotes");
                 });
@@ -421,15 +451,26 @@ namespace api.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("api.Models.StockModel", b =>
+            modelBuilder.Entity("api.Models.StockPriceHistory", b =>
                 {
-                    b.HasOne("api.Models.StockQuote", "StockQuote")
-                        .WithOne("StockModel")
-                        .HasForeignKey("api.Models.StockModel", "StockQuoteId")
+                    b.HasOne("api.Models.StockModel", "StockModel")
+                        .WithMany()
+                        .HasForeignKey("StockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("StockQuote");
+                    b.Navigation("StockModel");
+                });
+
+            modelBuilder.Entity("api.Models.StockQuote", b =>
+                {
+                    b.HasOne("api.Models.StockModel", "StockModel")
+                        .WithOne("StockQuote")
+                        .HasForeignKey("api.Models.StockQuote", "StockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StockModel");
                 });
 
             modelBuilder.Entity("api.Models.Transaction", b =>
@@ -469,9 +510,9 @@ namespace api.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("api.Models.StockQuote", b =>
+            modelBuilder.Entity("api.Models.StockModel", b =>
                 {
-                    b.Navigation("StockModel")
+                    b.Navigation("StockQuote")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

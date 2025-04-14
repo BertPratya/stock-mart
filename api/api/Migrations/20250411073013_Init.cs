@@ -224,6 +224,25 @@ namespace api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "StockPriceHistories",
+                columns: table => new
+                {
+                    StockId = table.Column<int>(type: "integer", nullable: false),
+                    RecordedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockPriceHistories", x => new { x.StockId, x.RecordedAt });
+                    table.ForeignKey(
+                        name: "FK_StockPriceHistories_StockModels_StockId",
+                        column: x => x.StockId,
+                        principalTable: "StockModels",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Transactions",
                 columns: table => new
                 {
@@ -299,6 +318,12 @@ namespace api.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_StockPriceHistories_StockId_RecordedAt",
+                table: "StockPriceHistories",
+                columns: new[] { "StockId", "RecordedAt" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Transactions_StockId",
                 table: "Transactions",
                 column: "StockId",
@@ -314,6 +339,10 @@ namespace api.Migrations
                 table: "Wallets",
                 column: "UserId",
                 unique: true);
+
+            migrationBuilder.Sql("SELECT create_hypertable('\"StockPriceHistories\"', 'RecordedAt');");
+
+            migrationBuilder.Sql("CREATE INDEX ix_stockid_recordedat ON \"StockPriceHistories\" (\"StockId\", \"RecordedAt\" DESC);");
         }
 
         /// <inheritdoc />
@@ -333,6 +362,9 @@ namespace api.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "StockPriceHistories");
 
             migrationBuilder.DropTable(
                 name: "Transactions");

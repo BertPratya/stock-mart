@@ -36,16 +36,15 @@ namespace api.Repositories
         {
             return await _context.StockQuotes
                 .Include(sq => sq.StockModel)
-                .ThenInclude(sm => sm.StockQuote) 
                 .FirstOrDefaultAsync(sq => sq.StockQuoteId == quoteId);
         }
 
         public async Task<StockQuote> GetByStockIdAsync(int stockId)
         {
             return await _context.StockQuotes
-                .Include(sq => sq.StockModel) 
-                .ThenInclude(sm => sm.StockQuote) 
+                .Include(sq => sq.StockModel)
                 .FirstOrDefaultAsync(sq => sq.StockId == stockId);
+                
         }
 
         public async Task<StockQuote> UpdateAvailableSharesAsynce(int stockQuoteId, int availableShares)
@@ -96,7 +95,29 @@ namespace api.Repositories
             return stockQuote;
         }
 
+        public async Task<StockQuote> UpdateByStockIdAsync(int stockId, decimal currentPrice)
+        {
+            if (currentPrice <= 0)
+            {
+                throw new ArgumentException("Current price must be greater than zero.", nameof(currentPrice));
+            }
 
+            var stockQuote = await _context.StockQuotes
+                .FirstOrDefaultAsync(sq => sq.StockId == stockId);
+
+            if (stockQuote == null)
+            {
+                throw new KeyNotFoundException($"StockQuote with StockId {stockId} not found.");
+            }
+
+            stockQuote.CurrentPrice = currentPrice;
+            stockQuote.LastUpdated = DateTime.UtcNow;
+
+            _context.StockQuotes.Update(stockQuote);
+            await _context.SaveChangesAsync();
+
+            return stockQuote;
+        }
 
 
 

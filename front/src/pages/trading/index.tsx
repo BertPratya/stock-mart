@@ -18,7 +18,6 @@ const TradingPage: React.FC = () => {
 
     
     useEffect(() => {
-        // Small delay to ensure DOM updates before resize
         const timeoutId = setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
         }, 300);
@@ -29,9 +28,7 @@ const TradingPage: React.FC = () => {
 
     return (
         <Box display='flex' flexDirection='row' sx={{ overflow: 'hidden', flex: 1 }} height="100%">
-            {/* Left side - Chart and floating button */}
             <Box flex={graphFlex} display="flex" flexDirection="column" height="100%" position="relative">
-                {/* Make chart take all available height with proper padding for button */}
                 <Box 
                     sx={{ 
                         flexGrow: 1,
@@ -43,10 +40,7 @@ const TradingPage: React.FC = () => {
                     <ChartBox isCollapsed ={isPendingOrdersCollapsed}/>
                 </Box>
                 
-                {/* Remove this empty Box that's taking up space */}
-                {/* <Box flex={isPendingOrdersCollapsed ? 7 : 1} sx={{ position: 'relative', paddingBottom: '20px' }}></Box> */}
                 
-                {/* Pending Orders Panel - Only show when not collapsed */}
                 {isPendingOrdersCollapsed && (
                     <Box 
                     sx={{ 
@@ -75,10 +69,11 @@ const TradingPage: React.FC = () => {
                         </Box>
                         
                         <Box sx={{ 
-                            flex: 1,  // Take remaining space
-                            overflow: 'auto', // Enable scrolling
-                            px: 2, // Add padding
+                            flex: 1,  
+                            overflow: 'auto', 
+                            px: 2, 
                             pb: 2,
+                            zIndex: 13,
                             
                         }}>
                             <PendingOrder />
@@ -86,7 +81,6 @@ const TradingPage: React.FC = () => {
                     </Box>
                 )}
                 
-                {/* Centered floating button */}
                 {!isPendingOrdersCollapsed && (
                     <Box
                         onClick={togglePendingOrders}
@@ -106,7 +100,7 @@ const TradingPage: React.FC = () => {
                             boxShadow: 3,
                             cursor: 'pointer',
                             transition: 'all 0.2s ease-in-out',
-                            zIndex: 10,
+                            zIndex: 12,
                             '&:hover': {
                                 transform: 'translateX(-50%) translateY(-2px)',
                                 boxShadow: 4,
@@ -119,7 +113,6 @@ const TradingPage: React.FC = () => {
                 )}
             </Box>
             
-            {/* Right side - Order Panel */}
             <Box flex={10-graphFlex} height="100%">
                 <RightPanel />
             </Box>
