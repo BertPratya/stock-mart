@@ -6,7 +6,7 @@ import { tokens } from '../../theme';
 import { CandlestickSeries, ColorType, createChart } from 'lightweight-charts';
 import SearchBar from './searchbar';
 import { useSelector, useDispatch, TypedUseSelectorHook } from 'react-redux';
-import { setupHandlers, startConnection, subscribeToStock } from '../../services/dataHubService';
+import { setupHandlers, startConnection, subscribeToStock,unsubscribeFromStock } from '../../services/dataHubService';
 import type { RootState } from '../../redux/store';
 import { getStockPriceHistory } from '../../services/tradingService';
 import { initial } from 'lodash';
@@ -49,22 +49,45 @@ const ChartBox: React.FC<ChartBoxProps> = ({ isCollapsed }) => {
         setCurrentStock(nextStock);
     }, [symbol, name, sharesAvailable, price]);
 
+    const prevStockIdRef = useRef<number>(-999);
+
+    // Then modify the effect
     useEffect(() => {
         let isMounted = true;
-        const initializeConnection = async () => {
+        
+        const handleStockSubscription = async () => {
+            if (stockId === -999) return;
+            
             try {
                 await startConnection();
                 if (!isMounted) return;
+                
                 await setupHandlers(dispatch);
-                await subscribeToStock(317);
-                console.log("Successfully subscribed to stocks");
+                
+                // Unsubscribe from previous stock ID if it was valid
+                const prevStockId = prevStockIdRef.current;
+                if (prevStockId !== -999 && prevStockId !== stockId) {
+                    await unsubscribeFromStock(prevStockId);
+                    console.log(`Unsubscribed from previous stock ${prevStockId}`);
+                }
+                
+                // Subscribe to new stock
+                await subscribeToStock(stockId);
+                
+                // Update reference to current stock ID
+                prevStockIdRef.current = stockId;
+                
             } catch (error) {
-                console.error("Failed to initialize SignalR:", error);
+                console.error("Failed to manage stock subscriptions:", error);
             }
         };
-        initializeConnection();
-        return () => { isMounted = false; };
-    }, [dispatch]);
+        
+        handleStockSubscription();
+        
+        return () => { 
+            isMounted = false;
+        };
+    }, [stockId, dispatch]);
 
     useEffect(() => {
         if (!chartContainer.current || chartRef.current || stockId === -999) return; 
@@ -133,6 +156,10 @@ const ChartBox: React.FC<ChartBoxProps> = ({ isCollapsed }) => {
         }
     }, [realTimePrice?.open]);
 
+
+
+    
+
     useEffect(() => {
         const { low, high, open, close, timeStamp } = realTimePrice || {};
         if (low != null && high != null && open != null && close != null && timeStamp && seriesRef.current) {
@@ -143,7 +170,7 @@ const ChartBox: React.FC<ChartBoxProps> = ({ isCollapsed }) => {
     }, [realTimePrice]);
 
     return (
-        <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
+        <Box sx={{ width: '100%', height: '100%', position: 'relative' }} display='flex'>
             <Box onClick={toggleSearchBar}
                 sx={{
                     position: 'absolute',
@@ -167,7 +194,7 @@ const ChartBox: React.FC<ChartBoxProps> = ({ isCollapsed }) => {
 
             {isSearchBarAppear && <SearchBar />}
 
-            <Box
+            <Box display='flex'
                 onClick={isSearchBarAppear ? toggleSearchBar : undefined}
                 ref={chartContainer}
                 sx={{ width: '100%', height: '100%', position: 'relative' }}

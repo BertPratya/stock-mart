@@ -35,7 +35,6 @@ public class CandleStickBackGroundService : BackgroundService
             _stockPriceRepo = stockPriceRepo;
             _stockRepo = stockRepository;
 
-            // Fetch stock details for all symbols in the constructor
             var stockSymbols = new List<string> { "MSFT", "AAPL" };
             foreach (var symbol in stockSymbols)
             {
@@ -90,14 +89,13 @@ public class CandleStickBackGroundService : BackgroundService
                 DateTime alignedNow = GetAlignedTimestamp(now);
 
                 bool startNewPeriod = alignedNow != currentTimeStamp;
-
+                decimal currenceVariance = 0.04m;
                 if (startNewPeriod)
                 {
                     foreach (var stockId in candleSticks.Keys)
                     {
                         var candleStick = candleSticks[stockId];
 
-                        // Save candlestick data
                         await stockPriceRepo.CreateAsync(
                             stockId,
                             candleStick.Open,
@@ -107,7 +105,6 @@ public class CandleStickBackGroundService : BackgroundService
                             candleStick.TimeStamp
                         );
 
-                        // Update stock quote
                         await stockQuoteRepo.UpdateByStockIdAsync(stockId, candleStick.Close);
                     }
 
@@ -153,7 +150,7 @@ public class CandleStickBackGroundService : BackgroundService
                     isNewPeriod = false;
                 }
 
-                await Task.Delay(200, stoppingToken);
+                await Task.Delay(100, stoppingToken);
             }
         }
     }

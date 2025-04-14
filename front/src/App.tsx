@@ -42,7 +42,7 @@ function App() {
                       <Sidebar />
                       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                         <Topbar />
-                        <Box 
+                        <Box  
                           component="main" 
                           sx={{ 
                             flexGrow: 1,

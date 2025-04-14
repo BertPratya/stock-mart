@@ -6,7 +6,7 @@ import { Box, IconButton, useTheme, Tooltip, Typography, Button, List, ListItem,
 import { ColorModeContext, tokens } from "../../theme";
 import InputBase from "@mui/material/InputBase";
 import { getStockQuery } from "../../services/tradingService";
-import { useDispatch, UseDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setStock } from '../../redux/tradingSlice';
 interface StockData {
   id: number;
