@@ -7,7 +7,6 @@ import { themeSettings, tokens } from '../../theme';
 import { registerUser } from '../../services/accountService';
 import { useNavigate } from 'react-router-dom';
 const lightTheme = createTheme(themeSettings("light"));
-const navigate = useNavigate();
 
 interface RegisterFormProps {
   setIsLogin: React.Dispatch<React.SetStateAction<boolean>>;
@@ -18,6 +17,8 @@ const RegisterForm = ({ setIsLogin, isLogin }: RegisterFormProps) => {
   const theme = lightTheme;
   const colors = tokens(theme.palette.mode);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const navigate = useNavigate();
+
   
   const formik = useFormik({
     initialValues: {
