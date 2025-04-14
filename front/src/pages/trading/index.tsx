@@ -113,7 +113,7 @@ const TradingPage: React.FC = () => {
                 )}
             </Box>
             
-            <Box flex={10-graphFlex} height="100%">
+            <Box flex={10-graphFlex} height="100%" display='flex'>
                 <RightPanel />
             </Box>
         </Box>
