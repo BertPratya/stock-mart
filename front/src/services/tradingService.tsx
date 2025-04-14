@@ -7,6 +7,7 @@ import React from "react";
 import { useState,useEffect,useRef } from "react";
 
 
+const getToken = () => localStorage.getItem('token') || '';
 
 
 export enum StockSortBy {
@@ -28,7 +29,7 @@ export const getStockQuery = async (query: string, sortby: string, isDecending:b
             url: `${serverAddr}/stock?Query=${query}&SortBy=${stockSortByMapping[sortby as keyof typeof StockSortBy]}&IsDecsending=${isDecending}&PageNumber=${pageNumber}&PageSize=${pageSize}`,
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${tokens}`, 
+                "Authorization": `Bearer ${getToken()}`, 
             },
             withCredentials: false,
         };
@@ -52,7 +53,7 @@ export const getStockPriceHistory = async (stockId: number) => {
             url: `${serverAddr}/PriceChart/stock/${stockId}`,
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${tokens}`, 
+                "Authorization": `Bearer ${getToken()}`, 
             },
             withCredentials: false,
         };

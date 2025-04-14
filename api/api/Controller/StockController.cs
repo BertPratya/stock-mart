@@ -97,14 +97,12 @@ namespace api.Controller
                 TotalShares = stockDto.TotalShares
             };
 
-            // Create the StockModel
             await _stockRepo.CreateAsync(stockModel);
 
-            // Create a StockQuote for the newly created StockModel
             var stockQuote = await _stockQuoteRepo.CreateAsync(
-                stockModel.Id, // StockId
-                stockModel.TotalShares, // AvailableShares
-                0 // Initial CurrentPrice (set to 0 or any default value)
+                stockModel.Id, 
+                stockModel.TotalShares, 
+                0 
             );
 
             return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, new

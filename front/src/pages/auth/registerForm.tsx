@@ -5,8 +5,9 @@ import * as Yup from 'yup';
 import { createTheme } from '@mui/material/styles';
 import { themeSettings, tokens } from '../../theme';
 import { registerUser } from '../../services/accountService';
-
+import { useNavigate } from 'react-router-dom';
 const lightTheme = createTheme(themeSettings("light"));
+const navigate = useNavigate();
 
 interface RegisterFormProps {
   setIsLogin: React.Dispatch<React.SetStateAction<boolean>>;
@@ -18,7 +19,6 @@ const RegisterForm = ({ setIsLogin, isLogin }: RegisterFormProps) => {
   const colors = tokens(theme.palette.mode);
   const [formSubmitted, setFormSubmitted] = useState(false);
   
-  // Formik initialization
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -35,12 +35,18 @@ const RegisterForm = ({ setIsLogin, isLogin }: RegisterFormProps) => {
     onSubmit: async (values) => {
         try {
           const data = await registerUser(values.email, values.password);
+          localStorage.setItem('token', data.token);
+            
+          // Also store user info if needed
+          localStorage.setItem('userId', data.userId);
+          localStorage.setItem('userName', data.userName);
+          localStorage.setItem('userEmail', data.email);
+          navigate('/');
+
         } catch (err: any) {
           if (err.response?.status === 409) {
-            // user already exists
             formik.setErrors({ email: 'User already exists' });
           } else {
-            // general or network error
             console.error('Unexpected error:', err);
             alert('Something went wrong. Please try again later.');
           }

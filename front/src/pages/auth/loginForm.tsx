@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import { createTheme } from '@mui/material/styles';
 import { themeSettings, tokens } from '../../theme';
 import { loginUser, registerUser } from '../../services/accountService';
+import { useNavigate } from 'react-router-dom';
 
 const lightTheme = createTheme(themeSettings("light"));
 
@@ -18,6 +19,7 @@ interface LoginFormProps {
   const theme = lightTheme;
   const colors = tokens(theme.palette.mode);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const navigate = useNavigate();
   
   const formik = useFormik({
     initialValues: {
@@ -31,6 +33,13 @@ interface LoginFormProps {
     onSubmit: async (values) => {
       try{
             const data = await loginUser(values.email,values.password)
+            localStorage.setItem('token', data.token);
+            
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('userName', data.userName);
+            localStorage.setItem('userEmail', data.email);
+            
+            navigate('/');
             
       }catch(err:any){
             if(err.response?.status === 401){

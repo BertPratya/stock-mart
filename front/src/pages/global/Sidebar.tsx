@@ -46,15 +46,15 @@ const Sidebar = () => {
     "& .pro-inner-item": {
       padding: "5px 35px 5px 20px !important",
       color: `${colors.primary[100]} !important`,
-      transition: "all 0.3s ease !important", // Changed to 'all' for smooth transitions
+      transition: "all 0.3s ease !important", 
     },
     "& .pro-inner-item:hover": {
         color: `${colors.blueAccent[200]} !important`,
-        background: `${colors.blueAccent[700]} !important`, // Added active background
+        background: `${colors.blueAccent[700]} !important`, 
     },
     "& .pro-menu-item.active": {
       color: `${colors.blueAccent[200]} !important`,
-      background: `${colors.blueAccent[800]} !important`, // Added active background
+      background: `${colors.blueAccent[800]} !important`, 
     },
   }}
 >
